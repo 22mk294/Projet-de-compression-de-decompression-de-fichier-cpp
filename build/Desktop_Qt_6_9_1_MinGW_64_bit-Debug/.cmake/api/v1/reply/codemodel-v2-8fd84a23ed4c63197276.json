@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-e5af3ffdf6a8d5919c95.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Archiz",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Archiz::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Archiz-Debug-cbd9cbc7fae4111e3802.json",
+					"name" : "Archiz",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Archiz_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Archiz_autogen-Debug-8295fecb7b524d13172b.json",
+					"name" : "Archiz_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Archiz_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Archiz_autogen_timestamp_deps-Debug-96d52519516f36c94f41.json",
+					"name" : "Archiz_autogen_timestamp_deps",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/joelm/Documents/Archiz/build/Desktop_Qt_6_9_1_MinGW_64_bit-Debug",
+		"source" : "C:/Users/joelm/Documents/Archiz"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}
