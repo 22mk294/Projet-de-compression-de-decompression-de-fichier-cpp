@@ -2,36 +2,29 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "compressor.h"
+#include "decompressor.h"
+#include "crypteur.h"
 
-class QLineEdit;
-class QPushButton;
-class QLabel;
-class QTableWidget;
-class QMenuBar;
-class QAction;
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
 private:
-    QLineEdit *passwordEdit;
-    QLineEdit *fileEdit;
-    QPushButton *browseButton;
-    QPushButton *encryptButton;
-    QPushButton *decryptButton;
-    QTableWidget *fileTable;
-    QLabel *statusLabel;
-    QLabel *passwordLabel;
-    QMenuBar *menuBar;
-    QAction *fichiersAction;
-    QAction *parametresAction;
+    Ui::MainWindow *ui;
 
-    void setupMenu();
-    void setupUI();
-    void addFileToTable(const QString &filename, const QString &size, const QString &state);
+private slots:
+    void on_browseInputButton_clicked();
+    void on_browseOutputButton_clicked();
+    void on_encryptButton_clicked();
+    void on_decryptButton_clicked();
 };
 
 #endif // MAINWINDOW_H
