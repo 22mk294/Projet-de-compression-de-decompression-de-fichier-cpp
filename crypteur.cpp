@@ -1,54 +1,87 @@
 #include "crypteur.h"
-#include <fstream>
+#include <QFile>
+#include <QByteArray>
 #include <vector>
+#include <numeric> // Requis pour std::iota
 
-// La fonction de chiffrement/déchiffrement a été améliorée pour être plus robuste et efficace.
-// Elle traite maintenant les fichiers par blocs pour éviter de charger des fichiers volumineux en mémoire,
-// et elle gère correctement le cas où la clé est vide.
+// --- Implémentation du chiffrement par flux (inspiré de RC4) ---
+// Cet algorithme utilise la clé pour générer un flux d'octets pseudo-aléatoires.
+// Chaque octet du fichier est ensuite combiné (XOR) avec un octet de ce flux.
+// C'est beaucoup plus sécurisé que de simplement répéter la clé.
 
-bool Crypteur::traiterFichier(const std::string& fichierEntree, const std::string& fichierSortie, const std::string& cle) {
-    // 1. Vérifier si la clé est vide. Le chiffrement est impossible sans clé.
-    if (cle.empty()) {
-        return false;
-    }
+// Cette classe interne gère l'état de l'algorithme.
+class StreamCipherState {
+public:
+    // 1. Le "Key-Scheduling Algorithm" (KSA) initialise l'état avec la clé.
+    StreamCipherState(const QByteArray& key) {
+        S.resize(256);
+        std::iota(S.begin(), S.end(), 0); // Initialise le tableau S avec 0, 1, 2, ...
 
-    // 2. Ouvrir les fichiers en mode binaire.
-    std::ifstream in(fichierEntree, std::ios::binary);
-    if (!in) {
-        // Impossible d'ouvrir le fichier d'entrée
-        return false;
-    }
-
-    std::ofstream out(fichierSortie, std::ios::binary);
-    if (!out) {
-        // Impossible de créer le fichier de sortie
-        return false;
-    }
-
-    // 3. Traiter le fichier par blocs pour être efficace avec la mémoire.
-    const size_t bufferSize = 4096; // Traiter par blocs de 4KB
-    char buffer[bufferSize];
-    size_t keyIndex = 0;
-
-    while (in.read(buffer, sizeof(buffer))) {
-        size_t bytesRead = in.gcount();
-        for (size_t i = 0; i < bytesRead; ++i) {
-            buffer[i] ^= cle[keyIndex];
-            keyIndex = (keyIndex + 1) % cle.length();
+        int j = 0;
+        for (int i = 0; i < 256; ++i) {
+            unsigned char key_byte = static_cast<unsigned char>(key.at(i % key.length()));
+            j = (j + S[i] + key_byte) % 256;
+            std::swap(S[i], S[j]); // Mélange le tableau S en utilisant la clé
         }
-        out.write(buffer, bytesRead);
     }
 
-    // Gérer le dernier bloc qui peut être plus petit que bufferSize
-    size_t bytesRead = in.gcount();
-    if (bytesRead > 0) {
-        for (size_t i = 0; i < bytesRead; ++i) {
-            buffer[i] ^= cle[keyIndex];
-            keyIndex = (keyIndex + 1) % cle.length();
+    // 2. Le "Pseudo-random generation algorithm" (PRGA) génère le prochain octet du flux.
+    char getNextKeystreamByte() {
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+        std::swap(S[i], S[j]);
+        return S[(S[i] + S[j]) % 256];
+    }
+
+private:
+    std::vector<unsigned char> S;
+    int i = 0;
+    int j = 0;
+};
+
+
+bool Crypteur::traiterFichier(const QString& fichierEntree, const QString& fichierSortie, const QByteArray& cle) {
+    if (cle.isEmpty()) {
+        return false; // Pas de chiffrement sans clé
+    }
+
+    QFile inputFile(fichierEntree);
+    if (!inputFile.open(QIODevice::ReadOnly)) {
+        return false; // Impossible d'ouvrir le fichier d'entrée
+    }
+
+    QFile outputFile(fichierSortie);
+    if (!outputFile.open(QIODevice::WriteOnly)) {
+        inputFile.close();
+        return false; // Impossible de créer le fichier de sortie
+    }
+
+
+    // L'algorithme est symétrique : la même opération est utilisée pour chiffrer et déchiffrer.
+    StreamCipherState cipher(cle);
+
+    const qint64 bufferSize = 4096;
+
+    while (!inputFile.atEnd()) {
+        // On utilise QByteArray pour lire un bloc du fichier.
+        QByteArray buffer = inputFile.read(bufferSize);
+        
+        // On applique l'opération XOR sur chaque octet du bloc.
+        for (int i = 0; i < buffer.size(); ++i) {
+            char keystreamByte = cipher.getNextKeystreamByte();
+            buffer[i] = buffer[i] ^ keystreamByte;
         }
-        out.write(buffer, bytesRead);
+        
+        // On écrit le bloc traité dans le fichier de sortie.
+        if (outputFile.write(buffer) != buffer.size()) {
+            inputFile.close();
+            outputFile.close();
+            return false; // Erreur d'écriture
+        }
     }
 
-    // 4. S'assurer que tout s'est bien passé
-    return in.eof() && out.good();
+    inputFile.close();
+    outputFile.close();
+
+    return true; // Succès
 }

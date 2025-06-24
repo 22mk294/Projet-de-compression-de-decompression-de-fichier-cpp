@@ -1,4 +1,4 @@
-# Makefile pour CrypteurDeFichiers
+# Makefile pour Chiffrement DeFichiers
 
 # --- Configuration ---
 # Mettez ici le chemin vers Qt 6.6.3 + MinGW 64-bit
@@ -6,7 +6,7 @@ QT_DIR = C:/Qt/6.6.3/mingw_64
 
 # --- Outils ---
 CXX = g++
-TARGET = CrypteurDeFichiers.exe
+TARGET = ChiffrementDeFichiers.exe
 MOC = "$(QT_DIR)/bin/moc.exe"
 UIC = "$(QT_DIR)/bin/uic.exe"
 
