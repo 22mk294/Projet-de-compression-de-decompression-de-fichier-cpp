@@ -6,10 +6,12 @@
 class QString;
 class QByteArray;
 
+enum CrypteurResult { Success = 0, WriteError, ReadError, BadPassword };
+
 class Crypteur {
 public:
     // La fonction prend maintenant des objets Qt pour une meilleure compatibilité
-    static bool traiterFichier(const QString& fichierEntree, const QString& fichierSortie, const QByteArray& cle);
+    static CrypteurResult traiterFichier(const QString& fichierEntree, const QString& fichierSortie, const QByteArray& cle);
 };
 
 #endif // CRYPTEUR_H

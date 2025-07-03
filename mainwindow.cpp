@@ -45,23 +45,23 @@ void MainWindow::on_encryptButton_clicked()
         return;
     }
 
-    // Si le chemin de sortie est vide, on ouvre une boîte de dialogue "Enregistrer sous...".
+    // Si le champ de sortie est vide, on ajoute .enc à l'extension
     if (outputFile.isEmpty()) {
         QFileInfo fileInfo(inputFile);
-        QString defaultName = fileInfo.dir().filePath(fileInfo.fileName() + ".enc");
-        outputFile = QFileDialog::getSaveFileName(this, "Enregistrer le fichier chiffré", defaultName);
-
-        // Si l'utilisateur a cliqué sur "Annuler", on arrête le processus.
-        if (outputFile.isEmpty()) {
-            return;
-        }
+        outputFile = fileInfo.absolutePath() + "/" + fileInfo.completeBaseName() + ".enc";
     }
 
-    // Appel corrigé avec les types Qt (QString, QByteArray)
-    if (Crypteur::traiterFichier(inputFile, outputFile, key.toUtf8())) {
+    CrypteurResult result = Crypteur::traiterFichier(inputFile, outputFile, key.toUtf8());
+    if (result == Success) {
         QMessageBox::information(this, "Succès", "Fichier chiffré avec succès :\n" + outputFile);
+    } else if (result == WriteError) {
+        QMessageBox::critical(this, "Erreur", "Erreur d'écriture lors du chiffrement.");
+    } else if (result == ReadError) {
+        QMessageBox::critical(this, "Erreur", "Erreur de lecture du fichier d'entrée.");
+    } else if (result == BadPassword) {
+        QMessageBox::critical(this, "Erreur", "Mot de passe invalide ou vide.");
     } else {
-        QMessageBox::critical(this, "Erreur", "Le chiffrement a échoué. Vérifiez le fichier d'entrée et les permissions d'écriture.");
+        QMessageBox::critical(this, "Erreur", "Le chiffrement a échoué.");
     }
 }
 
@@ -76,28 +76,30 @@ void MainWindow::on_decryptButton_clicked()
         return;
     }
 
-    // Si le chemin de sortie est vide, on ouvre une boîte de dialogue "Enregistrer sous...".
+    // Si le champ de sortie est vide, on retire .enc et on restaure l'extension d'origine
     if (outputFile.isEmpty()) {
         QFileInfo fileInfo(inputFile);
-        QString defaultName;
+        QString base = fileInfo.completeBaseName();
+        QString ext = fileInfo.suffix().toLower() == "enc" ? fileInfo.completeBaseName().section('.', -1) : fileInfo.suffix();
         if (fileInfo.suffix().toLower() == "enc") {
-            defaultName = fileInfo.dir().filePath(fileInfo.baseName());
+            // Si le fichier s'appelle fichier.txt.enc, on restaure fichier.txt
+            outputFile = fileInfo.absolutePath() + "/" + base;
         } else {
-            defaultName = fileInfo.dir().filePath(fileInfo.fileName() + ".dec");
-        }
-        
-        outputFile = QFileDialog::getSaveFileName(this, "Enregistrer le fichier déchiffré", defaultName);
-
-        // Si l'utilisateur a cliqué sur "Annuler", on arrête le processus.
-        if (outputFile.isEmpty()) {
-            return;
+            // Sinon, on ajoute .dec
+            outputFile = fileInfo.absolutePath() + "/" + fileInfo.fileName() + ".dec";
         }
     }
 
-    // Appel corrigé avec les types Qt (QString, QByteArray)
-    if (Crypteur::traiterFichier(inputFile, outputFile, key.toUtf8())) {
+    CrypteurResult result = Crypteur::traiterFichier(inputFile, outputFile, key.toUtf8());
+    if (result == Success) {
         QMessageBox::information(this, "Succès", "Fichier déchiffré avec succès :\n" + outputFile);
+    } else if (result == BadPassword) {
+        QMessageBox::critical(this, "Erreur", "Mot de passe incorrect : impossible de déchiffrer ce fichier.");
+    } else if (result == WriteError) {
+        QMessageBox::critical(this, "Erreur", "Erreur d'écriture lors du déchiffrement.");
+    } else if (result == ReadError) {
+        QMessageBox::critical(this, "Erreur", "Erreur de lecture du fichier d'entrée.");
     } else {
-        QMessageBox::critical(this, "Erreur", "Le déchiffrement a échoué. Vérifiez le fichier, la clé et les permissions d'écriture.");
+        QMessageBox::critical(this, "Erreur", "Le déchiffrement a échoué.");
     }
 }
